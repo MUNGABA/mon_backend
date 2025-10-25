@@ -63,8 +63,10 @@ exports.login = async (req, res) => {
 
     res.json({ token, user });
   } catch (error) {
-    res.status(500).json({ error: "Erreur serveur" });
-  }
+  console.error("❌ ERREUR LOGIN:", error);
+  res.status(500).json({ error: error.message || "Erreur serveur" });
+}
+
 };
 
 exports.adminLogin = async (req, res) => {
