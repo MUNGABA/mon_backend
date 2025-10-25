@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // ou "mysql" ou "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum CandidatureStatus {
+  NON_POSTULE
+  EN_ATTENTE
+  ACCEPTE
+  REFUSE
+}
+
+model User {
+  id                Int               @id @default(autoincrement())
+  nom               String
+  postnom           String
+  prenom            String
+  tel               String
+  adresse           String
+  email             String            @unique
+  password          String
+  role              Role              @default(CANDIDAT)
+  photo             String?
+  active            Boolean           @default(true)
+  candidatureStatus CandidatureStatus @default(NON_POSTULE)
+
+  // 🔹 Gestion de l'assignation
+  assignedAgentId    Int? // id de l’agent assigné
+  assignedAgent      User?  @relation("AgentCandidates", fields: [assignedAgentId], references: [id])
+  assignedCandidates User[] @relation("AgentCandidates")
+
+  createdAt DateTime @default(now())
+
+  // 🔹 Notifications
+  notificationsReceived NotificationRecipient[]
+
+  // 🔹 Relations amitié
+  sentFriendRequests     Friendship[] @relation("SentFriendRequests")
+  receivedFriendRequests Friendship[] @relation("ReceivedFriendRequests")
+
+  // 🔹 Messages candidats ↔ candidats
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  // 🔹 Messages candidats ↔ staff
+  sentMessagesPro     MessagePro[] @relation("SentMessagesPro")
+  receivedMessagesPro MessagePro[] @relation("ReceivedMessagesPro")
+
+}
+
+model Notification {
+  id         Int                     @id @default(autoincrement())
+  message    String
+  createdAt  DateTime                @default(now())
+  role       Role? // à qui est destinée (ADMIN, AGENT, CANDIDAT)
+  recipients NotificationRecipient[]
+}
+
+model NotificationRecipient {
+  id             Int       @id @default(autoincrement())
+  notificationId Int
+  userId         Int
+  seen           Boolean   @default(false)
+  seenAt         DateTime?
+
+  notification Notification @relation(fields: [notificationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+}
+
+model Banner {
+  id        Int      @id @default(autoincrement())
+  image     String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  CANDIDAT
+  AGENT
+  ADMIN
+}
+
+model Friendship {
+  id          Int      @id @default(autoincrement())
+  requesterId Int
+  receiverId  Int
+  status      String   @default("PENDING") // PENDING | ACCEPTED | REFUSED
+  createdAt   DateTime @default(now())
+
+  requester User @relation("SentFriendRequests", fields: [requesterId], references: [id])
+  receiver  User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  createdAt  DateTime @default(now())
+  seen       Boolean  @default(false)
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId])
+}
+
+model MessagePro {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  createdAt  DateTime @default(now())
+  seen       Boolean  @default(false)
+
+  sender   User @relation("SentMessagesPro", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessagesPro", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId])
+}
