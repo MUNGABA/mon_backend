@@ -1,6 +1,7 @@
 // FILE: src/components/CompetitionsSection.jsx
 
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const categories = [
   { title: 'Quiz biblique à buzzer', desc: 'Questions basées sur la Bible dans son intégralité.' },
@@ -22,7 +23,7 @@ export default function CompetitionsSection() {
             <div key={c.title} className="rounded-lg bg-[#0b2c3588] p-6">
               <h3 className="text-xl font-semibold text-white">{c.title}</h3>
               <p className="mt-2 text-gray-300 text-sm">{c.desc}</p>
-              <a href="#inscription" className="mt-4 inline-block text-sm font-semibold text-indigo-400">S'inscrire →</a>
+              <a href="/register" className="mt-4 inline-block text-sm font-semibold text-indigo-400">S'inscrire →</a>
             </div>
           ))}
         </div>
