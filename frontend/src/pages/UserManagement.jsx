@@ -45,51 +45,47 @@ export default function UserManagement() {
   };
 
   // === 📌 Confirmer action ===
-  const confirmAction = async () => {
-    if (!password) {
-      alert("⚠ Mot de passe requis !");
-      return;
+const confirmAction = async () => {
+  if (!password) {
+    alert("⚠ Mot de passe requis !");
+    return;
+  }
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (!currentUser || currentUser.role !== "ADMIN") {
+    alert("⚠ Admin non connecté !");
+    return;
+  }
+
+  try {
+    if (modal.action === "role") {
+      await api.put(`/users/${modal.userId}/role`, {
+        role: modal.extra,
+        password,
+      });
+      alert("✅ Rôle mis à jour !");
+    } else if (modal.action === "status") {
+      await api.put(`/users/${modal.userId}/status`, {
+        active: modal.extra,
+        password,
+      });
+      alert(`✅ Utilisateur ${modal.extra ? "activé" : "désactivé"} !`);
+    } else if (modal.action === "delete") {
+      await api.delete(`/users/${modal.userId}`, {
+        data: { password },
+      });
+      alert("✅ Utilisateur supprimé !");
     }
 
-    try {
-      const adminEmail = localStorage.getItem("adminEmail");
-      if (!adminEmail) {
-        alert("⚠ Admin non connecté !");
-        return;
-      }
+    fetchUsers();
+    closeModal();
+  } catch (err) {
+    console.error("Erreur action:", err);
+    alert("❌ Erreur : " + (err.response?.data?.error || "Serveur"));
+  }
+};
 
-      if (modal.action === "role") {
-        await api.post("/admin/promote", {
-          userId: modal.userId,
-          role: modal.extra,
-          adminEmail,
-          password,
-        });
-        alert("✅ Rôle mis à jour !");
-      } else if (modal.action === "status") {
-        await api.post("/admin/status", {
-          userId: modal.userId,
-          active: modal.extra,
-          adminEmail,
-          password,
-        });
-        alert(`✅ Utilisateur ${modal.extra ? "activé" : "désactivé"} !`);
-      } else if (modal.action === "delete") {
-        await api.post("/admin/delete", {
-          userId: modal.userId,
-          adminEmail,
-          password,
-        });
-        alert("✅ Utilisateur supprimé !");
-      }
-
-      fetchUsers();
-      closeModal();
-    } catch (err) {
-      console.error("Erreur action:", err);
-      alert("❌ Erreur : " + (err.response?.data?.message || "Serveur"));
-    }
-  };
 
   // === 📌 Table utilisateurs ===
   const renderTable = (title, list) => (
