@@ -57,7 +57,8 @@ export default function Navbar() {
                 {item.name}
               </a>
             ))}
-            <a href="#inscription" className="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white hover:bg-indigo-500">S'inscrire</a>
+            <a href="/register" className="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white hover:bg-indigo-500">S'inscrire</a>
+            <a href="/login" className="ml-1 rounded-md bg-gray-800/80 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-500">Se connecter</a>
           </div>
         </div>
       )}
