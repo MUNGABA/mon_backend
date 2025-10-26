@@ -62,6 +62,15 @@ export default function Register() {
       <div className="absolute inset-0 bg-black/60"></div>
 
       <div className="relative z-10 w-full max-w-xl ml-20 bg-[#1e293b]/0 backdrop-blur-md p-10 rounded-2xl shadow-xl text-white">
+       {/* 🔹 Home en haut à droite */}
+        <div className="absolute top-4 right-4">
+          <Link
+            to="/"
+            className="text-blue-400 hover:text-blue-500 font-semibold"
+          >
+            Home
+          </Link>
+        </div>
         <h3 className="text-sm tracking-wide text-gray-300">COMMENCER MAINTENANT</h3>
         <h1 className="text-3xl font-bold mt-2">
           Crée votre compte<span className="text-blue-500">.</span>

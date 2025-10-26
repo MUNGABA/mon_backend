@@ -34,7 +34,18 @@ export default function Login() {
       style={{ backgroundImage: "url('/images/register.jpg')" }}
     >
       
-      <div className="relative z-10 w-full max-w-md ml-20 bg-[#1e293b]/0 backdrop-blur-md p-10 rounded-2xl shadow-xl text-white">
+      
+      <div className="relative z-10 w-full max-w-xl ml-20 bg-[#1e293b]/0 backdrop-blur-md p-10 rounded-2xl shadow-xl text-white">
+       {/* 🔹 Home en haut à droite */}
+        <div className="absolute top-4 right-4">
+          <Link
+            to="/"
+            className="text-blue-400 hover:text-blue-500 font-semibold"
+          >
+            Home
+          </Link>
+        </div>
+        
         <h1 className="text-3xl font-bold">Bienvenue 👋</h1>
         <p className="text-gray-300 mt-2 text-sm">
           Connectez-vous pour continuer votre aventure biblique.
