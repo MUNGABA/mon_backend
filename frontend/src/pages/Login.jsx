@@ -40,7 +40,7 @@ export default function Login() {
         <div className="absolute top-4 right-4">
           <Link
             to="/"
-            className="text-blue-400 hover:text-blue-500 font-semibold"
+            className="text-blue-50 hover:text-blue-50 font-semibold"
           >
             Home
           </Link>
