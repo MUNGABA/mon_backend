@@ -10,21 +10,20 @@ const {
   getUserById,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/auth");
-const uploadUserPhoto = require("../middlewares/uploadUserPhoto");
 const { ROLES } = require("../utils/roles");
 
 // === PROFIL UTILISATEUR ===
 router.get("/me", auth(), getProfile);
 
 // === ADMIN : gestion utilisateurs ===
-router.get("/", auth([ROLES.ADMIN]), getAllUsers);            // 🔹 liste complète
-router.put("/:id/role", auth([ROLES.ADMIN]), updateUserRole); // 🔹 changer rôle
-router.put("/:id/status", auth([ROLES.ADMIN]), updateUserStatus); // 🔹 activer/désactiver
-router.delete("/:id", auth([ROLES.ADMIN]), deleteUser);       // 🔹 supprimer user
-// Admin récupère un utilisateur par ID
+router.get("/", auth([ROLES.ADMIN]), getAllUsers);
+router.put("/:id/role", auth([ROLES.ADMIN]), updateUserRole);
+router.put("/:id/status", auth([ROLES.ADMIN]), updateUserStatus);
+router.delete("/:id", auth([ROLES.ADMIN]), deleteUser);
 router.get("/:id", auth([ROLES.ADMIN, ROLES.AGENT]), getUserById);
 
 // === PHOTO DE PROFIL ===
-router.put("/me/photo", auth(), uploadUserPhoto.single("photo"), updatePhoto);
+// ❗ Maintenant, Cloudinary gère déjà l'upload, ici on enregistre juste l'URL
+router.put("/me/photo", auth(), updatePhoto);
 
 module.exports = router;

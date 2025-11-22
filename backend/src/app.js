@@ -13,12 +13,12 @@ const agentCandidatesRoutes = require("./routes/agentCandidatesRoutes");
 const adminCandidatesRoutes = require("./routes/adminCandidatesRoutes");
 const messageRoutesPro = require("./routes/messageRoutesPro");
 const assignation = require("./routes/assignRoutes")
+const fichierRoutes = require("./routes/cloudinaryRoute");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -33,5 +33,7 @@ app.use("/api/agent-candidates", agentCandidatesRoutes);
 app.use("/api/admin-candidates", adminCandidatesRoutes);
 app.use("/api/messages-pro", messageRoutesPro);
 app.use("/api/assign", assignation);
+
+app.use("/api/files", fichierRoutes);
 
 module.exports = app;

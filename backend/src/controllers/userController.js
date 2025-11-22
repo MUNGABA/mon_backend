@@ -25,19 +25,20 @@ exports.getProfile = async (req, res) => {
 // === PHOTO ===
 exports.updatePhoto = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: "Aucun fichier fourni" });
+    const { photoUrl } = req.body;
+
+    if (!photoUrl) {
+      return res.status(400).json({ error: "URL de l'image manquante" });
+    }
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: { photo: req.file.filename },
+      data: { photo: photoUrl },
     });
 
-    res.json({
-      ...user,
-      photoUrl: `${req.protocol}://${req.get("host")}/uploads/${user.photo}`,
-    });
+    res.json(user);
   } catch (err) {
-    console.error("❌ Erreur updatePhoto:", err);
+    console.error("❌ Erreur updatePhoto (Cloudinary):", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 };
