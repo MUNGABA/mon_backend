@@ -14,7 +14,7 @@ export default function AddBannerForm({ onUpdate }) {
   const fetchBanners = async () => {
     try {
       const res = await api.get("/banners");
-      setBanners(res.data);
+      setBanners(res.data); // b.image contient maintenant l'URL Cloudinary
     } catch (err) {
       console.error("Erreur récupération bannières:", err);
     }
@@ -66,7 +66,6 @@ export default function AddBannerForm({ onUpdate }) {
         Gestion des bannières
       </h3>
 
-      {/* ✅ Bouton "Choisir" stylé au lieu d’un input brut */}
       <label className="bg-gray-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-gray-700 inline-block mb-2">
         Choisir des images
         <input
@@ -86,12 +85,12 @@ export default function AddBannerForm({ onUpdate }) {
         {loading ? "Envoi..." : "Uploader"}
       </button>
 
-      {/* Liste des bannières */}
       <div className="mt-4 grid grid-cols-2 gap-2">
         {banners.map((b) => (
           <div key={b.id} className="relative group">
+            {/* 🌩 On utilise directement l'URL Cloudinary */}
             <img
-              src={`${import.meta.env.VITE_SOCKET_URL}/uploads/banners/${b.image}`}
+              src={b.image}
               alt="banner"
               className="w-full h-24 object-cover rounded shadow"
             />

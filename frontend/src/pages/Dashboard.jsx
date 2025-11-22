@@ -70,23 +70,36 @@ export default function Dashboard({ user: propUser }) {
     }
   };
 
-  const handleSavePhoto = async () => {
-    if (!selectedFile) return alert("Veuillez sélectionner une photo !");
-    try {
-      const formData = new FormData();
-      formData.append("photo", selectedFile);
-      const res = await api.put("/users/me/photo", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setUser(res.data);
-      setSelectedFile(null);
-      setPreview(res.data.photoUrl);
-      alert("Photo mise à jour !");
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la mise à jour !");
-    }
-  };
+const handleSavePhoto = async () => {
+  if (!selectedFile) return alert("Veuillez sélectionner une photo !");
+
+  try {
+    const formData = new FormData();
+    formData.append("image", selectedFile); // ne change pas ce nom !
+
+    // 1️⃣ Upload vers Cloudinary via backend
+    const uploadRes = await api.post("/files/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    const cloudUrl = uploadRes.data.url; // URL Cloudinary
+
+    // 2️⃣ Mettre à jour l’utilisateur dans ta DB
+    const updateRes = await api.put("/users/me/photo", {
+      photoUrl: cloudUrl,
+    });
+
+    setUser(updateRes.data);
+    setSelectedFile(null);
+    setPreview(updateRes.data.photoUrl);
+
+    alert("Photo mise à jour !");
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors de la mise à jour !");
+  }
+};
+
 
  // 🔹 Récupération messages au montage
     useEffect(() => {

@@ -367,14 +367,14 @@ useEffect(() => {
                   <div className="relative flex-shrink-0 cursor-pointer hover:scale-105 transition">
                       {/* Cercle avec bordure */}
                       <img
-                        src={u.photoUrl || "/default-avatar.png"}
-                        alt={u.nom}
-                        className="w-10 h-10 rounded-full border-2 border-blue-400"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedPhoto(u.photoUrl || "/default-avatar.png");
-                        }}
-                      />
+                          src={u.photoUrl ? u.photoUrl : "/default-avatar.png"}
+                          alt={`${u.nom} ${u.prenom}`}
+                          className="w-10 h-10 rounded-full border-2 border-blue-400"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPhoto(u.photoUrl ? u.photoUrl : "/default-avatar.png");
+                          }}
+                        />
 
                       {/* Badge de notifications */}
                       {unreadCounts[u.id] > 0 && (

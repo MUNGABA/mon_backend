@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
+  // --- Fetch profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -20,40 +23,51 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
+  // --- Gestion upload photo
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setSelectedFile(file);
-
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setPreview(reader.result);
       reader.readAsDataURL(file);
-    } else {
-      setPreview(null);
-    }
+    } else setPreview(null);
   };
 
   const handleSavePhoto = async () => {
-    if (!selectedFile) return alert("Veuillez d’abord sélectionner une photo !");
+    if (!selectedFile) return alert("Veuillez sélectionner une photo !");
     try {
       const formData = new FormData();
-      formData.append("photo", selectedFile); // ✅ doit correspondre à upload.single("photo")
+      formData.append("image", selectedFile); // ✅ doit correspondre au backend
 
-      const res = await api.put("/users/me/photo", formData, {
+      const uploadRes = await api.post("/files/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      const cloudUrl = uploadRes.data.url;
 
-      console.log("✅ Réponse API:", res.data);
-
-      setUser(res.data); // ✅ on garde l’utilisateur mis à jour
+      const updateRes = await api.put("/users/me/photo", { photoUrl: cloudUrl });
+      setUser(updateRes.data);
+      setPreview(updateRes.data.photoUrl);
       setSelectedFile(null);
-      setPreview(res.data.photoUrl);
-      
+
       alert("Photo mise à jour !");
     } catch (err) {
       console.error(err);
       alert("Erreur lors de la mise à jour !");
     }
+  };
+
+  // --- Gestion Cloudinary / avatar par défaut
+  const getPhotoUrl = (photo) => {
+    if (!photo) return "/default-avatar.png";
+    if (photo.startsWith("http") && photo.includes("res.cloudinary.com")) {
+      const url = new URL(photo);
+      const parts = url.pathname.split("/upload/");
+      if (parts.length === 2) {
+        return `${parts[0]}/upload/c_fill,w_200,h_200,f_auto,q_auto/${parts[1]}`;
+      }
+    }
+    return photo.startsWith("http") ? photo : `${import.meta.env.VITE_API_URL.replace("/api","")}/uploads/${photo}`;
   };
 
   if (!user) return <p>Chargement...</p>;
@@ -71,21 +85,18 @@ export default function Profile() {
         <h2 className="text-2xl font-bold mb-4">Mon Profil</h2>
 
         {/* Avatar */}
-        <img
-          src={preview || user?.photoUrl || "/default-avatar.png"}
+        <motion.img
+          layoutId="profile-photo"
+          src={preview || getPhotoUrl(user.photoUrl)}
           alt="avatar"
-          className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border"
+          className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border cursor-pointer"
+          onClick={() => setShowPopup(true)}
         />
 
         {/* Upload */}
         <label className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700">
           {user?.photoUrl ? "Changer la photo" : "Ajouter une photo"}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
         </label>
 
         {selectedFile && (
@@ -100,15 +111,41 @@ export default function Profile() {
         {/* Nom complet */}
         <h2 className="text-xl font-bold mt-4">{user.nom} {user.postnom} {user.prenom}</h2>
 
-        {/* Autres infos du candidat */}
+        {/* Infos */}
         <div className="mt-4 text-left space-y-2">
           <p><strong>Email :</strong> {user.email}</p>
           <p><strong>Téléphone :</strong> {user.tel || "Non renseigné"}</p>
           <p><strong>Adresse :</strong> {user.adresse || "Non renseignée"}</p>
           <p><strong>Date de naissance :</strong> {user.dateNaissance || "Non renseignée"}</p>
-          {/* Ajoute ici toutes les colonnes de ton Prisma.User */}
         </div>
       </div>
+
+      {/* Pop-up photo */}
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowPopup(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.img
+              layoutId="profile-photo"
+              src={preview || getPhotoUrl(user.photoUrl)}
+              alt="avatar"
+              className="max-w-lg max-h-[80%] rounded-lg shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setShowPopup(false)}
+              className="absolute top-4 right-4 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow hover:bg-red-700"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

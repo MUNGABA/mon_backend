@@ -76,10 +76,7 @@ export default function ChatModal({ user, friend, onClose, setLastMessages }) {
     }
   };
 
-  const getPhotoUrl = (photo) => {
-    if (!photo) return "/default-avatar.png";
-    return `${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${photo}`;
-  };
+  const getPhotoUrl = (photo) => photo || "/default-avatar.png";
 
   return (
     <div className="flex flex-col h-full bg-blue-900/50 rounded-xl overflow-hidden">

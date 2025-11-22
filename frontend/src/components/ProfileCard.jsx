@@ -4,19 +4,30 @@ import api from "../services/api";
 
 export default function ProfileCard({ user }) {
   const [name, setName] = useState(user?.name || "");
-  const [photo, setPhoto] = useState(null);
+  const [photo, setPhoto] = useState(null); // fichier local sélectionné
+  const [preview, setPreview] = useState(user?.photo || null); // URL Cloudinary ou preview local
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      setPreview(URL.createObjectURL(file)); // preview avant upload
+    }
+  };
 
   const handleSave = async () => {
     try {
       const formData = new FormData();
       formData.append("name", name);
-      if (photo) formData.append("photo", photo);
+      if (photo) formData.append("photo", photo); // upload fichier vers Cloudinary via backend
 
-      await api.put("/users/me", formData, {
+      const res = await api.put("/users/me", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       alert("Profil mis à jour !");
+      setPhoto(null);
+      setPreview(res.data.photo || preview); // mettre à jour l’URL Cloudinary renvoyée
     } catch (err) {
       console.error("Erreur update profil:", err);
       alert("Erreur lors de la sauvegarde.");
@@ -37,13 +48,13 @@ export default function ProfileCard({ user }) {
       <input
         type="file"
         accept="image/*"
-        onChange={(e) => setPhoto(e.target.files[0])}
+        onChange={handlePhotoChange}
         className="mb-3"
       />
 
-      {photo && (
+      {preview && (
         <img
-          src={URL.createObjectURL(photo)}
+          src={preview}
           alt="Aperçu"
           className="w-24 h-24 rounded-full object-cover mb-3"
         />

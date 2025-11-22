@@ -35,6 +35,12 @@ export default function BannerCarousel({ banners = [], interval = 7000 }) {
     return <p className="text-gray-500 text-sm">Aucune bannière disponible.</p>;
   }
 
+  const optimizeImage = (url, width = 600) => {
+  if (!url || !url.includes("/upload/")) return url;
+  return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
+  };
+
+
   return (
     <div className="relative w-full h-64 md:h-64 lg:h-72 overflow-hidden rounded-2xl shadow-lg">
       {/* Bande horizontale panoramique */}
@@ -46,7 +52,7 @@ export default function BannerCarousel({ banners = [], interval = 7000 }) {
         {banners.map((b) => (
           <img
             key={b.id}
-            src={`${import.meta.env.VITE_SOCKET_URL}/uploads/banners/${b.image}`}
+            src={optimizeImage(b.image, 1000)}
             alt="bannière"
             className="w-full h-full object-cover flex-shrink-0"
           />

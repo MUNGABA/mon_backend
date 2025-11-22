@@ -32,9 +32,9 @@ export default function FriendSuggestions({ searchTerm = "" }) {
   });
 
   const getPhotoUrl = (photo) => {
-    if (!photo) return "/default-avatar.png";
-    return `${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${photo}`;
-  };
+  if (!photo) return "/default-avatar.png";
+  return optimizeImage(photo, 400);    // <-- URL Cloudinary directe
+};
 
   const handleSendRequest = async (receiverId) => {
     try {
@@ -174,7 +174,7 @@ export default function FriendSuggestions({ searchTerm = "" }) {
       >
         <div className="relative" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={() => setSelectedPhoto(null)}
+            onClick={() => setSelectedPhoto(optimizeImage(u.photo, 1200))}
             className="absolute top-3 right-3 bg-red-600 text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-700 transition"
           >
             ✕

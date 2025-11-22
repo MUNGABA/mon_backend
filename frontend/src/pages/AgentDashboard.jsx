@@ -128,7 +128,12 @@ export default function AgentDashboard({ user: propUser }) {
               </h2>
               <motion.img
                 layoutId="agent-photo"
-                src={preview || user?.photoUrl || "/default-avatar.png"}
+                src={
+                  preview ||
+                  (user?.photoUrl
+                    ? `${user.photoUrl}?w=200&h=200&c=fill&f=auto,q_auto`
+                    : "/default-avatar.png")
+                }
                 alt="agent avatar"
                 className="w-24 h-24 rounded-full mx-auto mb-3 border-2 border-cyan-500 cursor-pointer hover:scale-105 transition-transform"
                 onClick={() => setShowPopup(true)}
@@ -215,7 +220,12 @@ export default function AgentDashboard({ user: propUser }) {
           >
             <motion.img
               layoutId="agent-photo"
-              src={preview || user?.photoUrl || "/default-avatar.png"}
+              src={
+                preview ||
+                (user?.photoUrl
+                  ? `${user.photoUrl}?w=600&h=600&c=fill&f=auto,q_auto`
+                  : "/default-avatar.png")
+              }
               alt="photo agent"
               className="max-w-lg max-h-[80%] rounded-lg shadow-lg border border-cyan-400"
               onClick={(e) => e.stopPropagation()}

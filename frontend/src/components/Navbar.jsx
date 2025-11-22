@@ -183,7 +183,7 @@ export default function Navbar({ user, onSearchChange }) {
         {/* 🧑 Profil */}
         <div onClick={goToProfile} className="cursor-pointer" title="Mon profil">
           <img
-            src={user?.photoUrl || "/default-avatar.png"}
+            src={optimizeImage(user?.photoUrl, 200) || "/default-avatar.png"}
             alt="avatar"
             className="w-10 h-10 rounded-full object-cover border-2 border-blue-600 hover:border-blue-800 transition"
           />

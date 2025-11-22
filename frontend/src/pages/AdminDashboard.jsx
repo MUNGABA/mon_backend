@@ -53,25 +53,26 @@ export default function AdminDashboard({ user: propUser }) {
   };
 
   const handleSavePhoto = async () => {
-    if (!selectedFile) return alert("Veuillez sélectionner une photo !");
-    try {
-      const formData = new FormData();
-      formData.append("photo", selectedFile);
+  if (!selectedFile) return alert("Veuillez sélectionner une photo !");
+  try {
+    const formData = new FormData();
+    formData.append("photo", selectedFile);
 
-      const res = await api.put("/users/me/photo", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    const res = await api.put("/users/me/photo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-      setUser(res.data);
-      setSelectedFile(null);
-      setPreview(res.data.photoUrl);
+    setUser(res.data);           // contient photoUrl Cloudinary
+    setSelectedFile(null);
+    setPreview(res.data.photoUrl); // utiliser l'URL Cloudinary directement
 
-      alert("Photo mise à jour !");
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la mise à jour !");
-    }
-  };
+    alert("Photo mise à jour !");
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors de la mise à jour !");
+  }
+};
+
 
   const showLeft = showLeftSidebar || windowWidth >= 768;
   const showRight = showRightSidebar || windowWidth >= 1024;
@@ -122,12 +123,12 @@ export default function AdminDashboard({ user: propUser }) {
                 Mon Profil (Admin)
               </h2>
               <motion.img
-                layoutId="admin-photo"
-                src={preview || user?.photoUrl || "/default-avatar.png"}
-                alt="admin avatar"
-                className="w-24 h-24 rounded-full mx-auto mb-3 border-2 border-cyan-500 cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => setShowPopup(true)}
-              />
+                  layoutId="admin-photo"
+                  src={preview || user?.photoUrl || "/default-avatar.png"}
+                  alt="admin avatar"
+                  className="w-24 h-24 rounded-full mx-auto mb-3 border-2 border-cyan-500 cursor-pointer hover:scale-105 transition-transform"
+                  onClick={() => setShowPopup(true)}
+                />
               <div className="flex flex-col items-center">
                 <label className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1 rounded cursor-pointer hover:from-cyan-500 hover:to-blue-600 text-sm mb-2">
                   Changer la photo

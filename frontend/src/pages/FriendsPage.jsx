@@ -112,14 +112,26 @@ export default function FriendsPage({ user }) {
     }
   };
 
-  const getPhotoUrl = (photo) => {
-    if (!photo) return "/default-avatar.png";
-    return `${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${photo}`;
-  };
+      const getPhotoUrl = (photo) => {
+      if (!photo) return "/default-avatar.png";
 
-  const filtered = friends.filter((u) =>
-    `${u.nom} ${u.postnom ?? ""} ${u.prenom ?? ""}`.toLowerCase().includes(search.toLowerCase())
-  );
+      // Si c’est déjà une URL complète (Cloudinary ou externe)
+      if (photo.startsWith("http")) {
+        if (photo.includes("res.cloudinary.com")) {
+          const url = new URL(photo);
+          if (!url.pathname.includes("/c_fill")) {
+            const parts = url.pathname.split("/upload/");
+            if (parts.length === 2) {
+              return `${parts[0]}/upload/c_fill,w_200,h_200,f_auto,q_auto/${parts[1]}`;
+            }
+          }
+        }
+        return photo; // URL externe non Cloudinary
+      }
+
+      // Cas serveur local (uploads)
+      return `${import.meta.env.VITE_API_URL.replace("/api", "")}/uploads/${photo}`;
+    };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 text-white p-6">
@@ -175,7 +187,11 @@ export default function FriendsPage({ user }) {
                       }}
                     >
                       <div className="w-full h-full rounded-full overflow-hidden border-2 border-cyan-400">
-                        <img src={getPhotoUrl(f.photo)} alt={f.nom} className="w-full h-full object-cover" />
+                        <img
+                          src={getPhotoUrl(f.photo)}
+                          alt={f.nom}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       {(unreadCounts[f.id] ?? 0) > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5">
