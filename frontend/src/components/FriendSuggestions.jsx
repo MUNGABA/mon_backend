@@ -3,6 +3,7 @@ import api from "../services/api";
 import { UserPlus, X, Check, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import optimizeImage from "../utils/optimizeImage";
 
 export default function FriendSuggestions({ searchTerm = "" }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -33,7 +34,7 @@ export default function FriendSuggestions({ searchTerm = "" }) {
 
   const getPhotoUrl = (photo) => {
   if (!photo) return "/default-avatar.png";
-  return optimizeImage(photo, 400);    // <-- URL Cloudinary directe
+  return optimizeImage(photo, 200);    // <-- URL Cloudinary directe
 };
 
   const handleSendRequest = async (receiverId) => {

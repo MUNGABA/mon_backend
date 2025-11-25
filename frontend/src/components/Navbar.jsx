@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Users, Search } from "lucide-react";
 import api from "../services/api";
 import { io } from "socket.io-client";
+import optimizeImage from "../utils/optimizeImage";
+
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, { transports: ["websocket"] });
 
