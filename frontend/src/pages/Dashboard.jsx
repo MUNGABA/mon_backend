@@ -75,16 +75,16 @@ const handleSavePhoto = async () => {
 
   try {
     const formData = new FormData();
-    formData.append("image", selectedFile); // ne change pas ce nom !
+    formData.append("file", selectedFile); // <-- "file" ici !
 
-    // 1️⃣ Upload vers Cloudinary via backend
+    // Upload vers Cloudinary via backend
     const uploadRes = await api.post("/files/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    const cloudUrl = uploadRes.data.url; // URL Cloudinary
+    const cloudUrl = uploadRes.data.url;
 
-    // 2️⃣ Mettre à jour l’utilisateur dans ta DB
+    // Mettre à jour l’utilisateur
     const updateRes = await api.put("/users/me/photo", {
       photoUrl: cloudUrl,
     });
@@ -99,6 +99,7 @@ const handleSavePhoto = async () => {
     alert("Erreur lors de la mise à jour !");
   }
 };
+
 
 
  // 🔹 Récupération messages au montage
