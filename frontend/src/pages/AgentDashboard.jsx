@@ -58,25 +58,34 @@ export default function AgentDashboard({ user: propUser }) {
   };
 
   const handleSavePhoto = async () => {
-    if (!selectedFile) return alert("Veuillez sélectionner une photo !");
-    try {
-      const formData = new FormData();
-      formData.append("photo", selectedFile);
+  if (!selectedFile) return alert("Veuillez sélectionner une photo !");
 
-      const res = await api.put("/users/me/photo", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+  try {
+    // 1) Upload Cloudinary
+    const formData = new FormData();
+    formData.append("image", selectedFile);
 
-      setUser(res.data);
-      setSelectedFile(null);
-      setPreview(res.data.photoUrl);
+    const uploadRes = await api.post("/files/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
-      alert("Photo mise à jour !");
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de la mise à jour !");
-    }
-  };
+    const cloudUrl = uploadRes.data.url;
+
+    // 2) Mise à jour du profil
+    const updateRes = await api.put("/users/me/photo", {
+      photoUrl: cloudUrl,
+    });
+
+    setUser(updateRes.data);
+    setSelectedFile(null);
+    setPreview(updateRes.data.photoUrl);
+
+    alert("Photo mise à jour !");
+  } catch (err) {
+    console.error("Erreur lors de l'upload:", err);
+    alert("Erreur lors de la mise à jour !");
+  }
+};
 
   const showLeft = showLeftSidebar || windowWidth >= 768;
   const showRight = showRightSidebar || windowWidth >= 1024;

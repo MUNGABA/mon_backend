@@ -24,29 +24,41 @@ export default function AddBannerForm({ onUpdate }) {
     setFiles(Array.from(e.target.files));
   };
 
-  const handleUpload = async () => {
-    if (files.length === 0) return alert("Veuillez sélectionner des images.");
-    setLoading(true);
+const handleUpload = async () => {
+  if (files.length === 0) return alert("Veuillez sélectionner des images.");
+  setLoading(true);
 
-    try {
+  try {
+    const urls = [];
+
+    // Charger chaque image sur Cloudinary
+    for (let file of files) {
       const formData = new FormData();
-      files.forEach((file) => formData.append("banners", file));
+      formData.append("image", file);
 
-      await api.post("/banners", formData, {
+      const resUpload = await api.post("/files/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setFiles([]);
-      fetchBanners();
-      if (onUpdate) onUpdate();
-      alert("✅ Bannières ajoutées avec succès !");
-    } catch (err) {
-      console.error("Erreur upload:", err);
-      alert("❌ Erreur lors de l’upload.");
-    } finally {
-      setLoading(false);
+      urls.push(resUpload.data.url);
     }
-  };
+
+    // Enregistrer dans la BDD
+    await api.post("/banners", { urls });
+
+    setFiles([]);
+    fetchBanners();
+    if (onUpdate) onUpdate();
+
+    alert("✔ Bannières ajoutées !");
+  } catch (err) {
+    console.error("Erreur upload bannière:", err);
+    alert("Erreur lors de l’upload.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer cette bannière ?")) return;

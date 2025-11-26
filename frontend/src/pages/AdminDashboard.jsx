@@ -52,26 +52,36 @@ export default function AdminDashboard({ user: propUser }) {
     }
   };
 
-  const handleSavePhoto = async () => {
+const handleSavePhoto = async () => {
   if (!selectedFile) return alert("Veuillez sélectionner une photo !");
-  try {
-    const formData = new FormData();
-    formData.append("photo", selectedFile);
 
-    const res = await api.put("/users/me/photo", formData, {
+  try {
+    // 1) Upload vers Cloudinary via ton backend
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+
+    const uploadRes = await api.post("/files/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    setUser(res.data);           // contient photoUrl Cloudinary
+    const cloudUrl = uploadRes.data.url;
+
+    // 2) Mise à jour du user avec l'URL Cloudinary
+    const updateRes = await api.put("/users/me/photo", {
+      photoUrl: cloudUrl,
+    });
+
+    setUser(updateRes.data);
     setSelectedFile(null);
-    setPreview(res.data.photoUrl); // utiliser l'URL Cloudinary directement
+    setPreview(updateRes.data.photoUrl);
 
     alert("Photo mise à jour !");
   } catch (err) {
-    console.error(err);
+    console.error("Erreur upload photo:", err);
     alert("Erreur lors de la mise à jour !");
   }
 };
+
 
 
   const showLeft = showLeftSidebar || windowWidth >= 768;

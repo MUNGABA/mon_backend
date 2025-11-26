@@ -11,6 +11,7 @@ const {
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/auth");
 const { ROLES } = require("../utils/roles");
+const upload = require("../config/upload.js");
 
 // === PROFIL UTILISATEUR ===
 router.get("/me", auth(), getProfile);
@@ -25,5 +26,6 @@ router.get("/:id", auth([ROLES.ADMIN, ROLES.AGENT]), getUserById);
 // === PHOTO DE PROFIL ===
 // ❗ Maintenant, Cloudinary gère déjà l'upload, ici on enregistre juste l'URL
 router.put("/me/photo", auth(), updatePhoto);
+
 
 module.exports = router;

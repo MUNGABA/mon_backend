@@ -13,9 +13,7 @@ exports.getProfile = async (req, res) => {
 
     res.json({
       ...user,
-      photoUrl: user.photo
-        ? `${req.protocol}://${req.get("host")}/uploads/${user.photo}`
-        : null,
+      photoUrl: user.photo || null, // 🔥 Cloudinary direct
     });
   } catch (err) {
     res.status(500).json({ error: "Erreur serveur" });
@@ -43,6 +41,7 @@ exports.updatePhoto = async (req, res) => {
   }
 };
 
+
 // === LISTE DES USERS (ADMIN/AGENT) ===
 exports.getAllUsers = async (req, res) => {
   try {
@@ -65,9 +64,7 @@ exports.getAllUsers = async (req, res) => {
 
     const withPhotoUrl = users.map((u) => ({
       ...u,
-      photoUrl: u.photo
-        ? `${req.protocol}://${req.get("host")}/uploads/${u.photo}`
-        : null,
+      photoUrl: u.photo || null,
     }));
 
     res.json(withPhotoUrl);
@@ -154,9 +151,7 @@ exports.getUserById = async (req, res) => {
 
     res.json({
       ...user,
-      photoUrl: user.photo
-        ? `${req.protocol}://${req.get("host")}/uploads/${user.photo}`
-        : null,
+      photoUrl: user.photo || null,
     });
   } catch (err) {
     console.error(err);

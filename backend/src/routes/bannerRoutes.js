@@ -12,7 +12,7 @@ const { ROLES } = require("../utils/roles");
  */
 
 // ✅ Ajouter une ou plusieurs bannières (ADMIN)
-router.post("/", auth([ROLES.ADMIN]), upload.array("banners", 10), addBanner);
+router.post("/", auth([ROLES.ADMIN]), addBanner);
 
 // ✅ Récupérer toutes les bannières (tout le monde)
 router.get("/", getBanners);

@@ -2,17 +2,19 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 // ✅ Ajouter une ou plusieurs bannières
+// Ajouter des bannières (URLs Cloudinary)
 exports.addBanner = async (req, res) => {
   try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: "Aucune image reçue" });
+    const { urls } = req.body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ error: "Aucune URL fournie" });
     }
 
-    // Créer un enregistrement pour chaque image
     const banners = await Promise.all(
-      req.files.map((file) =>
+      urls.map((url) =>
         prisma.banner.create({
-          data: { image: file.filename },
+          data: { image: url },
         })
       )
     );
