@@ -1,8 +1,9 @@
-const uploadFichier = async (req, res) => {
+exports.uploadFichier = async (req, res) => {
   try {
-    console.log("req.file:", req.file); // <-- pour debug
+    console.log("req.file:", req.file);
 
-    if (!req.file) return res.status(400).json({ error: "Aucun fichier reçu" });
+    if (!req.file)
+      return res.status(400).json({ error: "Aucun fichier reçu" });
 
     return res.json({
       message: "Upload réussi",
