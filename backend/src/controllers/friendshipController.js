@@ -160,7 +160,7 @@ exports.getSuggestions = async (req, res) => {
         postnom: true,
         prenom: true,
         email: true,
-        photo: true,
+        photo: true, // ici photo contient déjà l’URL Cloudinary complète
       },
     });
 
@@ -172,17 +172,10 @@ exports.getSuggestions = async (req, res) => {
           (f.receiverId === userId && f.requesterId === u.id)
       );
 
-      // ✅ Gestion correcte de la photo : si c'est une URL complète, on ne préfixe pas
-      let photoUrl = null;
-      if (u.photo) {
-        photoUrl = u.photo.startsWith("http")
-          ? u.photo
-          : `${req.protocol}://${req.get("host")}/uploads/${u.photo}`;
-      }
-
       return {
         ...u,
-        photoUrl,
+        // 🔹 Photo Cloudinary directement
+        photoUrl: u.photo || null,
         hasPendingRequest:
           relation?.status === "PENDING" && relation?.requesterId === userId,
         hasSentRequestToMe:
@@ -206,6 +199,7 @@ exports.getSuggestions = async (req, res) => {
       .json({ message: "Erreur lors de la récupération des suggestions." });
   }
 };
+
 
 /**
  * Retirer un ami (supprimer la relation ACCEPTED)
