@@ -75,7 +75,7 @@ const handleSavePhoto = async () => {
 
   try {
     const formData = new FormData();
-    formData.append("file", selectedFile); // <-- "file" ici !
+    formData.append("image", selectedFile); // <-- "file" ici !
 
     // Upload vers Cloudinary via backend
     const uploadRes = await api.post("/files/upload", formData, {
