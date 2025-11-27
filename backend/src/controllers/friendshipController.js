@@ -164,7 +164,7 @@ exports.getSuggestions = async (req, res) => {
       },
     });
 
-    // 🔹 Marquer chaque utilisateur selon le statut de relation
+    // 🔹 Formate les utilisateurs avec statut de relation et photo
     const formatted = users.map((u) => {
       const relation = friendships.find(
         (f) =>
@@ -172,12 +172,17 @@ exports.getSuggestions = async (req, res) => {
           (f.receiverId === userId && f.requesterId === u.id)
       );
 
-     return {
+      // ✅ Gestion correcte de la photo : si c'est une URL complète, on ne préfixe pas
+      let photoUrl = null;
+      if (u.photo) {
+        photoUrl = u.photo.startsWith("http")
+          ? u.photo
+          : `${req.protocol}://${req.get("host")}/uploads/${u.photo}`;
+      }
+
+      return {
         ...u,
-        // ✅ Chemin complet pour afficher la photo
-        photoUrl: u.photo
-          ? `${req.protocol}://${req.get("host")}/uploads/${u.photo}`
-          : null,
+        photoUrl,
         hasPendingRequest:
           relation?.status === "PENDING" && relation?.requesterId === userId,
         hasSentRequestToMe:
