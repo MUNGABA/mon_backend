@@ -37,18 +37,29 @@ exports.sendRequest = async (req, res) => {
 };
 
 /**
- * accepter à une demande d’amitié
+ * Répondre à une demande (ACCEPTER ou REFUSER)
  */
 exports.respondRequest = async (req, res) => {
   try {
-    const { friendshipId, response } = req.body; // ACCEPTED | REFUSED
+    const { friendshipId, accept } = req.body;
 
-    const friendship = await prisma.friendship.update({
+    if (!friendshipId)
+      return res.status(400).json({ message: "friendshipId manquant." });
+
+    if (accept) {
+      const friendship = await prisma.friendship.update({
+        where: { id: friendshipId },
+        data: { status: "ACCEPTED" },
+      });
+      return res.json(friendship);
+    }
+
+    // Sinon refuser = suppression
+    await prisma.friendship.delete({
       where: { id: friendshipId },
-      data: { status: response },
     });
 
-    res.json(friendship);
+    res.json({ message: "Demande refusée." });
   } catch (error) {
     console.error("Erreur respondRequest:", error);
     res.status(500).json({ message: "Erreur lors de la réponse à la demande." });
@@ -56,13 +67,12 @@ exports.respondRequest = async (req, res) => {
 };
 
 /**
- * Refuser une demande d’amitié
+ * Refuser une demande (endpoint séparé)
  */
 exports.rejectRequest = async (req, res) => {
   try {
     const { friendshipId } = req.body;
 
-    // Supprime la relation PENDING
     await prisma.friendship.delete({
       where: { id: friendshipId },
     });
@@ -70,7 +80,7 @@ exports.rejectRequest = async (req, res) => {
     res.json({ message: "Demande refusée." });
   } catch (error) {
     console.error("Erreur rejectRequest:", error);
-    res.status(500).json({ message: "Erreur lors du refus de la demande." });
+    res.status(500).json({ message: "Erreur lors du refus." });
   }
 };
 
@@ -93,7 +103,25 @@ exports.cancelRequest = async (req, res) => {
 };
 
 /**
- * Liste des amis (ACCEPTED)
+ * Retirer un ami
+ */
+exports.removeFriend = async (req, res) => {
+  try {
+    const { friendshipId } = req.body;
+
+    await prisma.friendship.delete({
+      where: { id: friendshipId },
+    });
+
+    res.json({ message: "Ami retiré." });
+  } catch (error) {
+    console.error("Erreur removeFriend:", error);
+    res.status(500).json({ message: "Erreur lors du retrait." });
+  }
+};
+
+/**
+ * Liste des amis
  */
 exports.getFriends = async (req, res) => {
   try {
@@ -124,30 +152,53 @@ exports.getFriends = async (req, res) => {
 };
 
 /**
- * Suggestions d’amis
+ * Invitations reçues
+ */
+exports.getReceivedRequests = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const requests = await prisma.friendship.findMany({
+      where: { receiverId: userId, status: "PENDING" },
+      include: { requester: true },
+    });
+
+    const formatted = requests.map((r) => ({
+      friendshipId: r.id,
+      id: r.requester.id,
+      nom: r.requester.nom,
+      postnom: r.requester.postnom,
+      prenom: r.requester.prenom,
+      photoUrl: r.requester.photo,
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error("Erreur getReceivedRequests:", error);
+    res.status(500).json({ message: "Erreur récupération des invitations." });
+  }
+};
+
+/**
+ * Suggestions d'amis
  */
 exports.getSuggestions = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 🔹 Récupère toutes les relations impliquant l'utilisateur
     const friendships = await prisma.friendship.findMany({
       where: {
-        OR: [
-          { requesterId: userId },
-          { receiverId: userId },
-        ],
+        OR: [{ requesterId: userId }, { receiverId: userId }],
       },
     });
 
-    // 🔸 Liste des relations acceptées (amis à exclure)
     const accepted = friendships.filter((f) => f.status === "ACCEPTED");
     const excludedIds = new Set(
       accepted.flatMap((f) => [f.requesterId, f.receiverId])
     );
+
     excludedIds.add(userId);
 
-    // 🔹 Trouve tous les candidats actifs non amis
     const users = await prisma.user.findMany({
       where: {
         id: { notIn: Array.from(excludedIds) },
@@ -159,12 +210,10 @@ exports.getSuggestions = async (req, res) => {
         nom: true,
         postnom: true,
         prenom: true,
-        email: true,
-        photo: true, // ici photo contient déjà l’URL Cloudinary complète
+        photo: true,
       },
     });
 
-    // 🔹 Formate les utilisateurs avec statut de relation et photo
     const formatted = users.map((u) => {
       const relation = friendships.find(
         (f) =>
@@ -174,17 +223,15 @@ exports.getSuggestions = async (req, res) => {
 
       return {
         ...u,
-        // 🔹 Photo Cloudinary directement
-        photoUrl: u.photo || null,
+        photoUrl: u.photo,
         hasPendingRequest:
-          relation?.status === "PENDING" && relation?.requesterId === userId,
+          relation?.status === "PENDING" && relation.requesterId === userId,
         hasSentRequestToMe:
-          relation?.status === "PENDING" && relation?.receiverId === userId,
+          relation?.status === "PENDING" && relation.receiverId === userId,
         friendshipId: relation?.id || null,
       };
     });
 
-    // 🔝 Trier : ceux qui m’ont envoyé une demande d’abord
     const sorted = formatted.sort((a, b) => {
       if (a.hasSentRequestToMe && !b.hasSentRequestToMe) return -1;
       if (!a.hasSentRequestToMe && b.hasSentRequestToMe) return 1;
@@ -194,41 +241,6 @@ exports.getSuggestions = async (req, res) => {
     res.json(sorted);
   } catch (error) {
     console.error("Erreur getSuggestions:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la récupération des suggestions." });
-  }
-};
-
-
-/**
- * Retirer un ami (supprimer la relation ACCEPTED)
- */
-exports.removeFriend = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { friendId } = req.body;
-
-    // Vérifie s’il existe une relation entre userId et friendId
-    const friendship = await prisma.friendship.findFirst({
-      where: {
-        OR: [
-          { requesterId: userId, receiverId: friendId, status: "ACCEPTED" },
-          { requesterId: friendId, receiverId: userId, status: "ACCEPTED" },
-        ],
-      },
-    });
-
-    if (!friendship)
-      return res.status(404).json({ message: "Cette amitié n’existe pas." });
-
-    await prisma.friendship.delete({
-      where: { id: friendship.id },
-    });
-
-    res.json({ message: "Ami retiré avec succès." });
-  } catch (error) {
-    console.error("Erreur removeFriend:", error);
-    res.status(500).json({ message: "Erreur lors du retrait de l’ami." });
+    res.status(500).json({ message: "Erreur lors des suggestions." });
   }
 };

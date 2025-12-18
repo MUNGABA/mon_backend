@@ -7,10 +7,10 @@ const controller = require("../controllers/friendshipController");
 // Envoyer une demande
 router.post("/send", requireCandidat, controller.sendRequest);
 
-// Répondre à une demande
+// Répondre (accepter/refuser)
 router.post("/respond", requireCandidat, controller.respondRequest);
 
-// Refuser une demande (optionnel, endpoint dédié)
+// Refuser explicitement
 router.post("/reject", requireCandidat, controller.rejectRequest);
 
 // Annuler une demande envoyée
@@ -19,6 +19,9 @@ router.post("/cancel", requireCandidat, controller.cancelRequest);
 // Retirer un ami
 router.post("/remove", requireCandidat, controller.removeFriend);
 
+// Invitations reçues
+router.get("/received", requireCandidat, controller.getReceivedRequests);
+
 // Liste des amis
 router.get("/friends", requireCandidat, controller.getFriends);
 
@@ -26,3 +29,4 @@ router.get("/friends", requireCandidat, controller.getFriends);
 router.get("/suggestions", requireCandidat, controller.getSuggestions);
 
 module.exports = router;
+  
