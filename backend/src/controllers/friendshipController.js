@@ -29,6 +29,18 @@ exports.sendRequest = async (req, res) => {
       data: { requesterId, receiverId },
     });
 
+    // 🔔 Émettre notification en temps réel
+    const io = req.io;
+    if (io) {
+  io.to(`user_${receiverId}`).emit("friendRequestReceived", {
+    friendshipId: friendship.id,
+    requesterId,
+    message: "Vous avez reçu une nouvelle demande d’amitié",
+  });
+
+  io.to(`user_${receiverId}`).emit("pendingRequestsUpdated");
+}
+
     res.json(friendship);
   } catch (error) {
     console.error("Erreur sendRequest:", error);
@@ -39,6 +51,9 @@ exports.sendRequest = async (req, res) => {
 /**
  * Répondre à une demande (ACCEPTER ou REFUSER)
  */
+/**
+ * Répondre à une demande (ACCEPTER ou REFUSER)
+ */
 exports.respondRequest = async (req, res) => {
   try {
     const { friendshipId, accept } = req.body;
@@ -46,20 +61,64 @@ exports.respondRequest = async (req, res) => {
     if (!friendshipId)
       return res.status(400).json({ message: "friendshipId manquant." });
 
+    const io = req.io; // récupérer socket.io
+
     if (accept) {
       const friendship = await prisma.friendship.update({
         where: { id: friendshipId },
         data: { status: "ACCEPTED" },
+        include: {
+          requester: true,
+          receiver: true,
+        },
       });
+
+      // 🔔 Notification temps réel pour le demandeur
+      if (io) {
+        const requesterId = friendship.requesterId;
+        const receiverId = friendship.receiverId;
+
+        io.to(`user_${requesterId}`).emit("friendRequestAccepted", {
+          friendshipId: friendship.id,
+          friendId: receiverId,
+          message: `${friendship.receiver.nom} ${friendship.receiver.prenom} a accepté votre demande.`,
+        });
+        // 🔔 MAJ compteur pour le receveur (une demande en moins)
+        io.to(`user_${receiverId}`).emit("pendingRequestsUpdated");
+
+
+        // Optionnel : envoyer au receveur aussi pour mise à jour front
+        io.to(`user_${receiverId}`).emit("friendAdded", {
+          friendshipId: friendship.id,
+          friendId: requesterId,
+          message: `Vous êtes maintenant amis avec ${friendship.requester.nom} ${friendship.requester.prenom}`,
+        });
+      }
+
       return res.json(friendship);
     }
 
     // Sinon refuser = suppression
-    await prisma.friendship.delete({
-      where: { id: friendshipId },
-    });
+const friendship = await prisma.friendship.findUnique({
+  where: { id: friendshipId },
+});
 
-    res.json({ message: "Demande refusée." });
+await prisma.friendship.delete({
+  where: { id: friendshipId },
+});
+
+// 🔔 notifier le DEMANDEUR
+if (io && friendship) {
+  io.to(`user_${friendship.requesterId}`).emit("friendRequestRejected", {
+    friendshipId,
+    message: "Votre demande d’amitié a été refusée.",
+  });
+
+  io.to(`user_${friendship.receiverId}`).emit("pendingRequestsUpdated");
+}
+
+res.json({ message: "Demande refusée." });
+
   } catch (error) {
     console.error("Erreur respondRequest:", error);
     res.status(500).json({ message: "Erreur lors de la réponse à la demande." });
@@ -91,9 +150,20 @@ exports.cancelRequest = async (req, res) => {
   try {
     const { friendshipId } = req.body;
 
-    await prisma.friendship.delete({
-      where: { id: friendshipId },
-    });
+    const friendship = await prisma.friendship.findUnique({
+  where: { id: friendshipId },
+});
+
+  await prisma.friendship.delete({
+    where: { id: friendshipId },
+  });
+
+  if (req.io && friendship) {
+    req.io.to(`user_${friendship.receiverId}`).emit("pendingRequestsUpdated");
+  }
+
+  res.json({ message: "Demande annulée." });
+
 
     res.json({ message: "Demande annulée." });
   } catch (error) {
@@ -253,5 +323,26 @@ exports.getSuggestions = async (req, res) => {
   } catch (error) {
     console.error("Erreur getSuggestions:", error);
     res.status(500).json({ message: "Erreur lors des suggestions." });
+  }
+};
+
+/**
+ * Nombre de demandes reçues non traitées
+ */
+exports.getPendingRequestsCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const count = await prisma.friendship.count({
+      where: {
+        receiverId: userId,
+        status: "PENDING",
+      },
+    });
+
+    res.json({ pendingRequests: count });
+  } catch (error) {
+    console.error("Erreur getPendingRequestsCount:", error);
+    res.status(500).json({ message: "Impossible de récupérer le compteur." });
   }
 };

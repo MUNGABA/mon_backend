@@ -28,5 +28,7 @@ router.get("/friends", requireCandidat, controller.getFriends);
 // Suggestions d’amis
 router.get("/suggestions", requireCandidat, controller.getSuggestions);
 
+router.get("/pending/count", requireCandidat, controller.getPendingRequestsCount);
+
 module.exports = router;
   
