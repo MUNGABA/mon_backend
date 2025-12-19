@@ -140,11 +140,22 @@ exports.getFriends = async (req, res) => {
       },
     });
 
-    const friends = friendships.map((f) =>
-      f.requesterId === userId ? f.receiver : f.requester
-    );
+    const friends = friendships.map((f) => {
+    const friend =
+        f.requesterId === userId ? f.receiver : f.requester;
+
+      return {
+        friendshipId: f.id, // 🔥 IMPORTANT
+        id: friend.id,
+        nom: friend.nom,
+        postnom: friend.postnom,
+        prenom: friend.prenom,
+        photoUrl: friend.photo,
+      };
+    });
 
     res.json(friends);
+
   } catch (error) {
     console.error("Erreur getFriends:", error);
     res.status(500).json({ message: "Erreur lors de la récupération des amis." });
